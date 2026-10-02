@@ -17,7 +17,6 @@
 | 仪表盘 (Dashboard) | 节点与策略组 (Proxies) | 订阅管理 (Profiles) |
 | :---: | :---: | :---: |
 | [![Dashboard](Screenshots/WinDashboard.png)](Screenshots/WinDashboard.png) | [![Proxies](Screenshots/WinProxies.png)](Screenshots/WinProxies.png) | [![Profiles](Screenshots/WinProfiles.png)](Screenshots/WinProfiles.png) |
-| *极光 Hero 卡片 / 流量监控与启停* | *节点策略组 / 延迟并发测速* | *订阅配置导入 / 一键切换激活* |
 
 ---
 
