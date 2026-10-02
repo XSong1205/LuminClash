@@ -1,22 +1,15 @@
-# LuminClash 🪐
+# LuminClash
 
-**LuminClash** 是一款基于 **Flutter** 与 **Mihomo (Clash.Meta)** 内核打造的现代跨平台代理客户端。界面设计汲取了知名 Android Root 管理器 **FolkPatch** 的紧凑人机工效美学，全方位采用 **Material You (Material 3 Expressive)** 动态色彩与原生动效体系。
+**LuminClash** 是一款基于 **Flutter** 与 **Mihomo (Clash.Meta)** 内核打造的现代跨平台代理客户端，全方位采用 **Material You (Material 3 Expressive)** 动态色彩与原生动效体系。
 
 ---
 
 ## 📸 核心设计特性
 
-- 🎨 **原生 Material 3 Expressive (M3E) 动态色彩系统**：
-  - 基于 Google 官方 `DynamicSchemeVariant.expressive` 算法，在桌面与移动端动态派生高表现力主色阶与互补三级色 (Tertiary)；
-  - 严谨遵循 M3E 语义容器规范（`surfaceContainer`、`primaryContainer`、`tertiaryContainer` 等），杜绝硬编码色值。
-- 📱 **移动端单手触控优化**：
-  - 侧边栏/导航轨 Tab 按键下沉至屏幕下半部拇指触控黄金区，大屏握持更舒适；
-  - 状态栏自适应避让，全面适配前摄挖孔、灵动岛与各类异形屏。
-- ⚡ **原生 Material 动效系统**：
-  - 采用 Flutter 原生 Material 3 控件（`FloatingActionButton`、`SegmentedButton`、`AnimatedSwitcher`、`InkWell` 水波纹）；
-  - 消除冗余数学计算，保障 60/120Hz 满帧丝滑运行。
-- 💻 **跨平台桌面与移动端同源**：
-  - 完美适配 **Windows 桌面端**（无边框沉浸式窗口拖拽、系统托盘就绪）与 **Android 移动端**。
+- 🎨 **灵动配色**：使用 Monet 取色，打造美观、灵动的视觉效果。
+- 📱 **舒适交互**：遵循 MD3 规范，布局直观清晰，单手操作自然顺手。
+- ⚡ **丝滑动效**：原生 M3 控件，保障 60/120Hz 满帧丝滑运行。
+- 💻 **多平台支持**：目前已测试支持 Windows，后续开发增加更多平台适配。
 
 ---
 
@@ -82,6 +75,3 @@ flutter build apk --release --split-per-abi
 ```
 
 ---
-
-## 🚀 自动发布 (GitHub Actions)
-项目已配置全自动 Release 工作流，当推送 `v*` 格式版本标签（例如 `git tag v1.0.0 && git push origin v1.0.0`）或在 Actions 中手动触发时，会自动拉取最新 LuminClashCore，并发构建 Windows x64 与 Android (arm64-v8a / armeabi-v7a / x86_64) 安装包并发布到 GitHub Releases。
