@@ -63,7 +63,8 @@ jobs:
 
       - name: Archive Windows Artifacts
         run: |
-          Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "LuminClash-windows-x64.zip" -Force
+          $releaseDir = if (Test-Path "build\windows\x64\runner\Release") { "build\windows\x64\runner\Release" } else { "build\windows\runner\Release" }
+          Compress-Archive -Path "$releaseDir\*" -DestinationPath "LuminClash-windows-x64.zip" -Force
 
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
@@ -137,7 +138,7 @@ jobs:
       - name: Generate Checksums
         run: |
           cd release-assets
-          sha256sum * > sha256sums.txt
+          find . -maxdepth 1 -type f ! -name "sha256sums.txt" -exec sha256sum {} + | sed 's|./||' > sha256sums.txt
           cat sha256sums.txt
 
       - name: Determine Tag Name
@@ -155,6 +156,7 @@ jobs:
           tag_name: ${{ steps.tag.outputs.tag_name }}
           name: LuminClash ${{ steps.tag.outputs.tag_name }}
           files: release-assets/*
-          draft: ${{ github.event.inputs.draft || false }}
-          prerelease: ${{ github.event.inputs.prerelease || false }}
+          draft: ${{ github.event.inputs.draft == true }}
+          prerelease: ${{ contains(steps.tag.outputs.tag_name, 'beta') || contains(steps.tag.outputs.tag_name, 'alpha') || github.event.inputs.prerelease == true }}
           generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}
