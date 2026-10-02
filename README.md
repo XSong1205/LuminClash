@@ -52,7 +52,19 @@ LuminClash/
 
 ## 🛠️ 构建与运行指南
 
-### Windows 桌面端
+### 0. 准备预编译 Mihomo 内核
+本项目代理内核依赖 [XSong1205/LuminClashCore](https://github.com/XSong1205/LuminClashCore)（每 6 小时自动同步上游并预编译 with_gvisor 动态库与二进制）。
+
+本地构建前，运行内置拉取脚本一键就绪内核：
+```powershell
+# 拉取全平台 (Windows & Android) 内核
+.\scripts\fetch_core.ps1
+
+# 或仅拉取 Windows 内核
+.\scripts\fetch_core.ps1 -Target windows
+```
+
+### 1. Windows 桌面端
 ```powershell
 # 运行开发热重载模式
 flutter run -d windows
@@ -62,9 +74,14 @@ flutter build windows
 # 生成文件位于: build\windows\x64\runner\Release\lumin_clash.exe
 ```
 
-### Android 移动端
+### 2. Android 移动端
 ```bash
-# 构建 Release 正式安装包 (APK)
-flutter build apk --release
-# 生成文件位于: build/app/outputs/flutter-apk/app-release.apk
+# 构建 Release 正式安装包 (按 ABI 独立架构切分打包)
+flutter build apk --release --split-per-abi
+# 生成文件位于: build/app/outputs/flutter-apk/app-*-release.apk
 ```
+
+---
+
+## 🚀 自动发布 (GitHub Actions)
+项目已配置全自动 Release 工作流，当推送 `v*` 格式版本标签（例如 `git tag v1.0.0 && git push origin v1.0.0`）或在 Actions 中手动触发时，会自动拉取最新 LuminClashCore，并发构建 Windows x64 与 Android (arm64-v8a / armeabi-v7a / x86_64) 安装包并发布到 GitHub Releases。
