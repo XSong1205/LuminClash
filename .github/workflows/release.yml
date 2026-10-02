@@ -1,0 +1,160 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      draft:
+        description: 'Publish as draft'
+        type: boolean
+        default: false
+      prerelease:
+        description: 'Publish as pre-release'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows (x64)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Download Mihomo Windows Core from LuminClashCore
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          New-Item -ItemType Directory -Force -Path temp_core
+          gh release download --repo XSong1205/LuminClashCore --pattern "LuminClashCore-windows-amd64-*.zip" --dir temp_core
+          $zipFile = Get-ChildItem -Path temp_core -Filter "*.zip" | Select-Object -First 1
+          Expand-Archive -Path $zipFile.FullName -DestinationPath temp_core/extracted -Force
+          New-Item -ItemType Directory -Force -Path assets/core
+          New-Item -ItemType Directory -Force -Path windows/runner
+          Copy-Item temp_core/extracted/mihomo.exe assets/core/mihomo.exe -Force
+          Copy-Item temp_core/extracted/mihomo.exe windows/runner/mihomo.exe -Force
+          Remove-Item -Recurse -Force temp_core
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run code analysis and tests
+        run: |
+          flutter analyze
+          flutter test
+
+      - name: Build Windows Release
+        run: flutter build windows --release
+
+      - name: Archive Windows Artifacts
+        run: |
+          Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "LuminClash-windows-x64.zip" -Force
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: LuminClash-windows-x64.zip
+          retention-days: 1
+
+  build-android:
+    name: Build Android (Split APKs)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Download Mihomo Android Core from LuminClashCore
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p temp_core
+          gh release download --repo XSong1205/LuminClashCore --pattern "LuminClashCore-android-jniLibs-*.zip" --dir temp_core
+          unzip -o temp_core/LuminClashCore-android-jniLibs-*.zip -d android/app/src/main/
+          rm -rf temp_core
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Android Release APKs
+        run: flutter build apk --release --split-per-abi
+
+      - name: Prepare APK outputs
+        run: |
+          mkdir -p apks
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk apks/LuminClash-android-arm64-v8a.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk apks/LuminClash-android-armeabi-v7a.apk
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk apks/LuminClash-android-x86_64.apk
+
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: apks/*
+          retention-days: 1
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-windows, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Generate Checksums
+        run: |
+          cd release-assets
+          sha256sum * > sha256sums.txt
+          cat sha256sums.txt
+
+      - name: Determine Tag Name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag_name=${{ github.event.inputs.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          name: LuminClash ${{ steps.tag.outputs.tag_name }}
+          files: release-assets/*
+          draft: ${{ github.event.inputs.draft || false }}
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+          generate_release_notes: true
