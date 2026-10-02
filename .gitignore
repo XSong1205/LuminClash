@@ -52,3 +52,6 @@ assets/core/*.exe
 !assets/core/.gitkeep
 windows/runner/*.exe
 android/app/src/main/jniLibs/
+
+# 难绷作者怎么还用的垃圾哈基米模型，不能被人看见😭
+gemini.md
